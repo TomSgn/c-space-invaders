@@ -11,11 +11,11 @@
 //-------------------------------
 #define WINDOW_WIDTH          375
 #define WINDOW_HEIGHT         667
-#define NUM_STARS             50   // Nombre d'étoiles
+#define NUM_STARS             70   // Nombre d'étoiles
 #define NUM_BULLETS           50
-#define NUM_ENEMIES           20
+#define NUM_ENEMIES           400
 #define FRAME_DELAY_MS        16   // ~60 FPS
-#define NUM_TRAILS            100
+#define NUM_TRAILS              100
 
 // Vitesse de déplacement du vaisseau
 #define SHIP_SPEED            5
@@ -29,6 +29,7 @@ void CheckBulletEnemyCollision();
 void CheckShieldEnemyCollision();
 void CheckMissileEnemyCollision(); // Ajoutez cette ligne
 void CheckShootEnemyCollision();   // Ajoutez cette ligne
+void CheckShipEnemyCollision();    // Ajoutez cette ligne
 Enemy* FindNearestEnemy(float x, float y);
 void SpawnEnemy();
 
@@ -47,10 +48,10 @@ TTF_Font*    g_font          = NULL;
 
 // Modification de la fonction CreateTrail pour empêcher les particules d'être au-dessus du vaisseau
 void CreateTrail(float x, float y, float vx, float vy, SDL_Color color) {
-    // S'assurer que y n'est pas au-dessus du vaisseau
-    if (y < g_ship.rect.y + g_ship.rect.h) { // Changement de + h/2 à + h
-        y = g_ship.rect.y + g_ship.rect.h;
-    }
+    // Supprimer la condition suivante :
+    // if (y < g_ship.rect.y + g_ship.rect.h) {
+    //     y = g_ship.rect.y + g_ship.rect.h;
+    // }
     
     for (int i = 0; i < NUM_TRAILS; i++) {
         if (!g_trails[i].active) {
@@ -59,7 +60,7 @@ void CreateTrail(float x, float y, float vx, float vy, SDL_Color color) {
             g_trails[i].vx = vx;
             g_trails[i].vy = vy;
             g_trails[i].color = color;
-            g_trails[i].lifetime = 60; // par exemple, 60 frames (~1 seconde à 60 FPS)
+            g_trails[i].lifetime = TRAIL_MAX_LIFETIME; // Ajuster la valeur pour chaque particule
             g_trails[i].active = 1;
             break;
         }
@@ -136,6 +137,7 @@ int main() {
     // Variables de boucle
     int running = 1;
     Uint32 lastSpawn = 0; // pour spawn ennemi
+    static int spawnDelay = 2000;
 
     while (running) {
         // EVENTS
@@ -250,8 +252,19 @@ int main() {
                 ShootBullet();
             }
             
-            // Spawning d'ennemis toutes les 2s
-            if (currentTime - lastSpawn > 2000) {
+            // Ajuster le délai de spawn selon le score
+            if (g_score > 50) {
+                spawnDelay = 1500;
+            }
+            if (g_score > 100) {
+                spawnDelay = 1000;
+            }
+            if (g_score > 200) {
+                spawnDelay = 700;
+            }
+
+            // Utiliser spawnDelay au lieu de 2000
+            if (currentTime - lastSpawn > spawnDelay) {
                 SpawnEnemy();
                 lastSpawn = currentTime;
             }
@@ -268,6 +281,7 @@ int main() {
             CheckShieldEnemyCollision(); // Ajout de la vérification des collisions du bouclier
             CheckMissileEnemyCollision(); // Ajout de la vérification des collisions des missiles
             CheckShootEnemyCollision();   // Ajout de la vérification des collisions des tirs
+            CheckShipEnemyCollision();    // Ajout de la vérification des collisions du vaisseau
 
             // RENDER
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -314,4 +328,24 @@ int main() {
     IMG_Quit();
     SDL_Quit();
     return 0;
+}
+
+void CheckShipEnemyCollision() {
+    SDL_Rect shipRect = g_ship.rect;
+    for (int i = 0; i < NUM_ENEMIES; i++) {
+        if (g_enemies[i].active) {
+            SDL_Rect enemyRect = {
+                (int)g_enemies[i].x,
+                (int)g_enemies[i].y,
+                34,
+                34
+            };
+            if (SDL_HasIntersection(&shipRect, &enemyRect)) {
+                if (!g_shieldActive) {
+                    g_ship.lives--;
+                }
+                g_enemies[i].active = 0;
+            }
+        }
+    }
 }

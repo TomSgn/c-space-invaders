@@ -45,9 +45,14 @@ void UpdateBullets() {
 void UpdateEnemies() {
     for (int i = 0; i < NUM_ENEMIES; i++) {
         if (g_enemies[i].active) {
+            // Mouvement vertical
             g_enemies[i].y += g_enemies[i].vy;
-            g_enemies[i].hitbox.x = (int)g_enemies[i].x;
-            g_enemies[i].hitbox.y = (int)g_enemies[i].y;
+            
+            // Mouvement horizontal sinusoïdal basé sur la position Y
+            float wave = 2.0f * sinf(g_enemies[i].y * 0.02f);
+            g_enemies[i].x += wave;
+
+            // Sortir de l'écran -> désactiver
             if (g_enemies[i].y > WINDOW_HEIGHT) {
                 g_enemies[i].active = 0;
             }
@@ -60,13 +65,9 @@ void UpdateTrails() {
         if (g_trails[i].active) {
             g_trails[i].x += g_trails[i].vx;
             g_trails[i].y += g_trails[i].vy;
-            g_trails[i].lifetime -= 1;
-            if (g_trails[i].lifetime <= 0 ||
-                g_trails[i].x < 0 || g_trails[i].x >= WINDOW_WIDTH ||
-                g_trails[i].y < 0 || g_trails[i].y >= WINDOW_HEIGHT) {
+            g_trails[i].lifetime--;
+            if (g_trails[i].lifetime <= 0) {
                 g_trails[i].active = 0;
-            } else {
-                g_trails[i].color.a = (Uint8)(255 * g_trails[i].lifetime / 60);
             }
         }
     }
@@ -75,22 +76,35 @@ void UpdateTrails() {
 void CheckBulletEnemyCollision() {
     for (int i = 0; i < NUM_BULLETS; i++) {
         if (g_bullets[i].active) {
+            SDL_Rect bulletRect = {
+                (int)g_bullets[i].x,
+                (int)g_bullets[i].y,
+                4,  // largeur projectile
+                12  // hauteur projectile
+            };
             for (int j = 0; j < NUM_ENEMIES; j++) {
-                if (g_enemies[j].active && SDL_HasIntersection(&g_bullets[i].hitbox, &g_enemies[j].hitbox)) {
-                    printf("Collision détectée entre une balle et un ennemi\n"); // Ajoutez cette ligne
-                    g_bullets[i].active = 0;
-
-                    // Créez des particules d'explosion à l'endroit de la collision
-                    for (int k = 0; k < 10; k++) {
-                        float angle = (float)k / 10.0f * 2.0f * M_PI;
-                        float speed = 2.0f + (rand() % 100) / 50.0f;
-                        SDL_Color color = {255, (Uint8)(rand() % 256), 0, 255}; // Jaune à rouge
-                        CreateTrail(g_enemies[j].hitbox.x + g_enemies[j].hitbox.w / 2, g_enemies[j].hitbox.y + g_enemies[j].hitbox.h / 2, cosf(angle) * speed, sinf(angle) * speed, color);
+                if (g_enemies[j].active) {
+                    SDL_Rect enemyRect = {
+                        (int)g_enemies[j].x,
+                        (int)g_enemies[j].y,
+                        34,
+                        34
+                    };
+                    if (SDL_HasIntersection(&bulletRect, &enemyRect)) {
+                        g_enemies[j].active = 0;
+                        g_bullets[i].active = 0;
+                        g_score += 10; // Augmenter le score
+                        
+                        // Augmenter la vitesse de tous les ennemis actifs
+                        for (int k = 0; k < NUM_ENEMIES; k++) {
+                            if (g_enemies[k].active) {
+                                g_enemies[k].vy += ENEMY_SPEED_INCREMENT;
+                            }
+                        }
+                        
+                        CreateExplosion(g_enemies[j].x + 17, g_enemies[j].y + 17);
+                        break;
                     }
-
-                    g_enemies[j].active = 0;
-                    g_score += 100; // Augmentez le score pour chaque ennemi détruit
-                    break;
                 }
             }
         }
@@ -176,5 +190,16 @@ void SpawnEnemy() {
             g_enemies[i].active = 1;
             break;
         }
+    }
+}
+
+void CreateExplosion(float x, float y) {
+    for(int i = 0; i < 10; i++) {
+        float angle = (float)(rand() % 360);
+        float speed = 2.0f + (float)(rand() % 30) / 10.0f;
+        float vx = cosf(angle * 3.14159f / 180.0f) * speed;
+        float vy = sinf(angle * 3.14159f / 180.0f) * speed;
+        SDL_Color explosionColor = {255, (Uint8)(rand() % 256), 0, 255};
+        CreateTrail(x, y, vx, vy, explosionColor);
     }
 }

@@ -120,8 +120,22 @@ void DrawTrails(SDL_Renderer* renderer) {
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
     for (int i = 0; i < NUM_TRAILS; i++) {
         if (g_trails[i].active) {
-            SDL_SetRenderDrawColor(renderer, g_trails[i].color.r, g_trails[i].color.g, g_trails[i].color.b, g_trails[i].color.a);
-            SDL_Rect trailRect = {(int)g_trails[i].x, (int)g_trails[i].y, 2, 2};
+            float ratio = (float)g_trails[i].lifetime / TRAIL_MAX_LIFETIME;
+            Uint8 alpha = (Uint8)(255 * ratio);
+            int size = (int)(6 * ratio); // Ajuster pour un effet de taille décroissante
+
+            SDL_SetRenderDrawColor(renderer, 
+                                   g_trails[i].color.r, 
+                                   g_trails[i].color.g, 
+                                   g_trails[i].color.b, 
+                                   alpha);
+
+            SDL_Rect trailRect = {
+                (int)g_trails[i].x, 
+                (int)g_trails[i].y, 
+                size, 
+                size
+            };
             SDL_RenderFillRect(renderer, &trailRect);
         }
     }

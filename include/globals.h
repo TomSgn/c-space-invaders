@@ -6,11 +6,13 @@
 
 #define WINDOW_WIDTH          375
 #define WINDOW_HEIGHT         667
-#define NUM_STARS             50
+#define NUM_STARS             70
 #define NUM_BULLETS           50
-#define NUM_ENEMIES           20
+#define NUM_ENEMIES           400
 #define FRAME_DELAY_MS        16
 #define NUM_TRAILS            100
+#define TRAIL_MAX_LIFETIME    120  // Définir la durée de vie max
+#define ENEMY_SPEED_INCREMENT 0.1f // Augmentation de la vitesse des ennemis après chaque destruction
 #define SHIP_SPEED            5
 #define SHIP_MAX_LIVES        3
 

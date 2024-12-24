@@ -19,6 +19,7 @@ void InitBullets() {
 void InitEnemies(SDL_Renderer* renderer) {
     for (int i = 0; i < NUM_ENEMIES; i++) {
         g_enemies[i].active = 0;
+        g_enemies[i].vy = 1.0f + (float)(rand() % 200) / 100.0f; // Augmenter la vitesse des ennemis
     }
     char filename[40];
     for (int i = 0; i < 11; i++) {
