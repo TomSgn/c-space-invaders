@@ -8,5 +8,6 @@ void UpdateTrails();
 void CheckBulletEnemyCollision();
 void CheckShieldEnemyCollision();
 void SpawnEnemy();
+void CheckShipEnemyCollision(); // Ajoutez cette ligne
 
 #endif // UPDATE_H

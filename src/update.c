@@ -178,3 +178,30 @@ void SpawnEnemy() {
         }
     }
 }
+
+// Vérifie la collision entre le vaisseau et les ennemis (réduit les vies si sans bouclier)
+void CheckShipEnemyCollision() {
+    if (!g_shieldActive) {
+        for (int i = 0; i < NUM_ENEMIES; i++) {
+            if (g_enemies[i].active && SDL_HasIntersection(&g_ship.rect, &g_enemies[i].hitbox)) {
+                printf("Collision détectée entre le vaisseau et un ennemi\n");
+                // Crée des particules d'explosion à l'emplacement du vaisseau
+                for (int k = 0; k < 10; k++) {
+                    float angle = (float)k / 10.0f * 2.0f * M_PI;
+                    float speed = 2.0f + (rand() % 100) / 50.0f;
+                    SDL_Color color = {255, (Uint8)(rand() % 256), 0, 255};
+                    CreateTrail(
+                        g_ship.rect.x + g_ship.rect.w / 2,
+                        g_ship.rect.y + g_ship.rect.h / 2,
+                        cosf(angle) * speed,
+                        sinf(angle) * speed,
+                        color
+                    );
+                }
+                g_enemies[i].active = 0;
+                g_ship.lives--;
+                break;
+            }
+        }
+    }
+}

@@ -29,6 +29,7 @@ void CheckBulletEnemyCollision();
 void CheckShieldEnemyCollision();
 void CheckMissileEnemyCollision(); // Ajoutez cette ligne
 void CheckShootEnemyCollision();   // Ajoutez cette ligne
+void CheckShipEnemyCollision();  // Ajoutez cette ligne
 Enemy* FindNearestEnemy(float x, float y);
 void SpawnEnemy();
 
@@ -180,7 +181,7 @@ int main() {
         // MACHINE À ÉTATS
         if (g_gameState == MENU) {
             // RENDER
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+            SDL_SetRenderDrawColor(renderer, 128, 0, 128, 255);
             SDL_RenderClear(renderer);
             DrawMenu(renderer, g_font);
             SDL_RenderPresent(renderer);
@@ -268,9 +269,10 @@ int main() {
             CheckShieldEnemyCollision(); // Ajout de la vérification des collisions du bouclier
             CheckMissileEnemyCollision(); // Ajout de la vérification des collisions des missiles
             CheckShootEnemyCollision();   // Ajout de la vérification des collisions des tirs
+            CheckShipEnemyCollision();    // Ajout de la vérification des collisions vaisseau-ennemi
 
             // RENDER
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+            SDL_SetRenderDrawColor(renderer, 128, 0, 128, 255);
             SDL_RenderClear(renderer);
 
             // Dessin
@@ -293,7 +295,7 @@ int main() {
         }
         else if (g_gameState == GAME_OVER) {
             // RENDER
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+            SDL_SetRenderDrawColor(renderer, 128, 0, 128, 255);
             SDL_RenderClear(renderer);
             DrawGameOver(renderer, g_font);
             SDL_RenderPresent(renderer);
