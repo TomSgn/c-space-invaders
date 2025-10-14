@@ -52,6 +52,7 @@ APPLE_FRAMEWORKS = \
 
 # Flags for device
 CFLAGS_DEVICE = -Wall -Wextra -std=c11 \
+	-DTARGET_OS_IPHONE=1 \
 	-I$(INCLUDE_DIR) \
 	-I$(SDL2_FRAMEWORKS_DIR)/SDL2.framework/Headers \
 	-I$(SDL2_FRAMEWORKS_DIR)/SDL2_image.framework/Headers \
@@ -71,6 +72,7 @@ LDFLAGS_DEVICE = -F$(SDL2_FRAMEWORKS_DIR) \
 
 # Flags for simulator
 CFLAGS_SIM = -Wall -Wextra -std=c11 \
+	-DTARGET_OS_IPHONE=1 \
 	-I$(INCLUDE_DIR) \
 	-I$(SDL2_FRAMEWORKS_DIR)/SDL2.framework/Headers \
 	-I$(SDL2_FRAMEWORKS_DIR)/SDL2_image.framework/Headers \
