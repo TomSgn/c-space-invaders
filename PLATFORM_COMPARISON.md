@@ -279,11 +279,11 @@ assets/             ← Shared assets
 
 Both platforms use identical:
 
-✅ Game logic (`src/update.c`)  
-✅ Rendering (`src/draw.c`)  
-✅ Initialization (`src/init.c`)  
-✅ Shooting mechanics (`src/shoot.c`)  
-✅ Data structures (`include/globals.h`)  
+✅ Game logic (`src/update.c`)
+✅ Rendering (`src/draw.c`)
+✅ Initialization (`src/init.c`)
+✅ Shooting mechanics (`src/shoot.c`)
+✅ Data structures (`include/globals.h`)
 ✅ Assets (textures, fonts)
 
 ## Development Workflow
