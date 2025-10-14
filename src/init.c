@@ -1,10 +1,6 @@
 #include "init.h"
 #include "globals.h"
-#ifdef TARGET_OS_IPHONE
-#include <SDL_image.h>
-#else
 #include <SDL2/SDL_image.h>
-#endif
 
 void InitStars() {
     for (int i = 0; i < NUM_STARS; i++) {
