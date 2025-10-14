@@ -1,0 +1,96 @@
+# Makefile for iOS build
+# This Makefile is designed to compile the Space Invaders game for iOS devices
+
+# Application name
+TARGET = SpaceInvaders
+
+# Directories
+SRC_DIR = ../src
+INCLUDE_DIR = ../include
+IOS_DIR = .
+OBJ_DIR = build
+
+# Source files
+SRC_FILES = $(wildcard $(SRC_DIR)/*.c)
+OBJ_FILES = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRC_FILES)) $(OBJ_DIR)/main_ios.o
+
+# iOS SDK settings
+IOS_SDK_VERSION = 17.0
+IOS_MIN_VERSION = 13.0
+IPHONE_SDK = iphoneos
+SIMULATOR_SDK = iphonesimulator
+
+# Compiler and flags
+CC = xcrun -sdk $(IPHONE_SDK) clang
+ARCH = -arch arm64
+
+# SDL2 paths (you need to have SDL2 iOS frameworks)
+SDL2_PATH = /usr/local/opt/SDL2
+SDL2_IMAGE_PATH = /usr/local/opt/SDL2_image
+SDL2_TTF_PATH = /usr/local/opt/SDL2_ttf
+
+CFLAGS = -Wall -Wextra -std=c11 \
+	-I$(INCLUDE_DIR) \
+	-I$(SDL2_PATH)/include \
+	-I$(SDL2_IMAGE_PATH)/include \
+	-I$(SDL2_TTF_PATH)/include \
+	-miphoneos-version-min=$(IOS_MIN_VERSION) \
+	$(ARCH)
+
+LDFLAGS = -F$(SDL2_PATH)/lib -framework SDL2 \
+	-F$(SDL2_IMAGE_PATH)/lib -framework SDL2_image \
+	-F$(SDL2_TTF_PATH)/lib -framework SDL2_ttf \
+	-framework UIKit \
+	-framework Foundation \
+	-framework CoreGraphics \
+	-framework QuartzCore \
+	-framework OpenGLES \
+	-framework AudioToolbox \
+	-miphoneos-version-min=$(IOS_MIN_VERSION) \
+	$(ARCH)
+
+# Main target
+all: $(TARGET)
+
+# Create executable
+$(TARGET): $(OBJ_FILES)
+	$(CC) $(ARCH) -o $@ $^ $(LDFLAGS)
+
+# Compile source files
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	mkdir -p $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/main_ios.o: main_ios.c
+	mkdir -p $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c main_ios.c -o $@
+
+# Clean build artifacts
+clean:
+	rm -rf $(OBJ_DIR) $(TARGET)
+
+# Rebuild
+re: clean all
+
+# Build for simulator
+simulator: CC = xcrun -sdk $(SIMULATOR_SDK) clang
+simulator: ARCH = -arch x86_64
+simulator: all
+
+.PHONY: clean re simulator all
+
+# Help target
+help:
+	@echo "iOS Build Makefile for Space Invaders"
+	@echo ""
+	@echo "Targets:"
+	@echo "  all        - Build for iOS device (ARM64)"
+	@echo "  simulator  - Build for iOS Simulator (x86_64)"
+	@echo "  clean      - Remove build artifacts"
+	@echo "  re         - Clean and rebuild"
+	@echo ""
+	@echo "Prerequisites:"
+	@echo "  - Xcode with iOS SDK installed"
+	@echo "  - SDL2, SDL2_image, and SDL2_ttf frameworks for iOS"
+	@echo ""
+	@echo "Note: You may need to adjust SDL2 paths in this Makefile"
