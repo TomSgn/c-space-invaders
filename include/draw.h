@@ -1,8 +1,13 @@
 #ifndef DRAW_H
 #define DRAW_H
 
+#ifdef TARGET_OS_IPHONE
+#include <SDL.h>
+#include <SDL_ttf.h>
+#else
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#endif
 
 void DrawStars(SDL_Renderer* renderer);
 void DrawBullets(SDL_Renderer* renderer);

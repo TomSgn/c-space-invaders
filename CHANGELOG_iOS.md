@@ -98,7 +98,32 @@ cd ios
 ./build_ios.sh device
 ```
 
-### 7. Configuration Files
+### 7. SDL Include Path Handling
+
+The code now uses conditional compilation for SDL includes to support both desktop and iOS builds:
+
+**Desktop builds:**
+```c
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_image.h>
+```
+
+**iOS builds:**
+```c
+#ifdef TARGET_OS_IPHONE
+#include <SDL.h>
+#include <SDL_ttf.h>
+#include <SDL_image.h>
+#endif
+```
+
+This is necessary because:
+- Desktop builds use pkg-config which expects `SDL2/` prefix
+- iOS builds use frameworks where headers are directly in the include path
+- The Makefile.ios automatically defines `TARGET_OS_IPHONE=1` to enable iOS-specific includes
+
+### 8. Configuration Files
 
 #### Info.plist
 ```xml
@@ -116,7 +141,7 @@ Features:
 - High DPI support
 - Proper app naming and identification
 
-### 8. Documentation
+### 9. Documentation
 
 Created comprehensive guides:
 
@@ -190,11 +215,16 @@ if (abs(dx) > SHIP_SPEED) {
 
 ### Unchanged Files
 All core game logic files remain unchanged:
-- `src/init.c` - Initialization
 - `src/update.c` - Game logic
 - `src/draw.c` - Rendering
 - `src/shoot.c` - Shooting mechanics
-- `include/*.h` - All headers
+
+### Minimally Modified Files
+Some files were minimally modified for platform compatibility:
+- `src/init.c` - Added conditional SDL_image include
+- `include/*.h` - Added conditional SDL includes for iOS framework compatibility
+
+These changes are backward compatible and don't affect desktop builds.
 
 This ensures:
 - ✅ Desktop version still works

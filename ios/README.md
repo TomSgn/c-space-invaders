@@ -156,9 +156,11 @@ ios/
 
 ### Build Errors
 
-**"SDL.h not found"**
+**"SDL.h not found"** or **"SDL2/SDL.h not found"**
 - Check that SDL2 frameworks are installed
 - Verify paths in Makefile.ios
+- The code uses conditional compilation: iOS builds include `<SDL.h>` (framework style), while desktop builds include `<SDL2/SDL.h>` (pkg-config style)
+- The Makefile.ios automatically defines `TARGET_OS_IPHONE=1` to enable iOS-specific includes
 
 **"No architectures to compile for"**
 - Ensure you're building on macOS

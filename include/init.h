@@ -1,7 +1,11 @@
 #ifndef INIT_H
 #define INIT_H
 
+#ifdef TARGET_OS_IPHONE
+#include <SDL.h>
+#else
 #include <SDL2/SDL.h>
+#endif
 #include "globals.h" // Ajoutez cette ligne pour inclure la définition de Enemy
 
 void InitStars();
