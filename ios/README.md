@@ -47,6 +47,32 @@ git clone https://github.com/libsdl-org/SDL_ttf.git
 # Build for iOS (each repository has Xcode projects in Xcode-iOS/)
 ```
 
+### Important: SDL2 Framework Header Structure
+
+This project uses the standard SDL2 include syntax (`#include <SDL2/SDL.h>`), which requires that your iOS SDL2 frameworks have headers organized with the SDL2 subdirectory:
+
+```
+SDL2.framework/Headers/SDL2/SDL.h
+SDL2_image.framework/Headers/SDL2/SDL_image.h
+SDL2_ttf.framework/Headers/SDL2/SDL_ttf.h
+```
+
+If your frameworks have headers at `SDL2.framework/Headers/SDL.h` (without the SDL2 subdirectory), you have two options:
+
+1. **Create symlinks** (recommended):
+   ```bash
+   cd SDL2.framework/Headers
+   ln -s . SDL2
+   cd ../../SDL2_image.framework/Headers
+   ln -s . SDL2
+   cd ../../SDL2_ttf.framework/Headers
+   ln -s . SDL2
+   ```
+
+2. **Modify Makefile.ios** to change include paths (not recommended as it diverges from standard SDL2 usage)
+
+Most modern SDL2 iOS framework builds already include the SDL2 subdirectory structure to match the desktop/Linux convention.
+
 ## Building
 
 ### Using the Build Script (Recommended)
