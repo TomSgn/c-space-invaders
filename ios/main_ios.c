@@ -3,11 +3,7 @@
 #include "../include/draw.h"
 #include "../include/shoot.h"
 #include "../include/globals.h"
-#ifdef TARGET_OS_IPHONE
-#include <SDL_image.h>
-#else
 #include <SDL2/SDL_image.h>
-#endif
 #include <stdio.h>
 
 //-------------------------------

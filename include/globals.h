@@ -1,13 +1,8 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
-#ifdef TARGET_OS_IPHONE
-#include <SDL.h>
-#include <SDL_ttf.h>
-#else
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
-#endif
 
 #define WINDOW_WIDTH          375
 #define WINDOW_HEIGHT         667
