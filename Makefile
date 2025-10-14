@@ -38,4 +38,13 @@ clean:
 # Rebuild complet
 re: clean all
 
-.PHONY: clean re
+# iOS build (requires macOS)
+ios:
+	@echo "Building for iOS..."
+	@cd ios && ./build_ios.sh device
+
+ios-simulator:
+	@echo "Building for iOS Simulator..."
+	@cd ios && ./build_ios.sh simulator
+
+.PHONY: clean re ios ios-simulator
