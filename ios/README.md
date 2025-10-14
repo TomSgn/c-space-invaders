@@ -61,13 +61,18 @@ If your frameworks have headers at `SDL2.framework/Headers/SDL.h` (without the S
 
 1. **Create symlinks** (recommended):
    ```bash
+   # Navigate to each framework's Headers directory and create a symlink
+   # This makes SDL.h accessible as SDL2/SDL.h by creating a self-referencing link
    cd SDL2.framework/Headers
-   ln -s . SDL2
+   ln -s . SDL2         # Creates Headers/SDL2 -> Headers
+   
    cd ../../SDL2_image.framework/Headers
    ln -s . SDL2
+   
    cd ../../SDL2_ttf.framework/Headers
    ln -s . SDL2
    ```
+   After this, `SDL2/SDL.h` will resolve to `Headers/SDL2/SDL.h` -> `Headers/SDL.h`
 
 2. **Modify Makefile.ios** to change include paths (not recommended as it diverges from standard SDL2 usage)
 
