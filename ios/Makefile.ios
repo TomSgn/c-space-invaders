@@ -15,55 +15,105 @@ SRC_FILES = $(wildcard $(SRC_DIR)/*.c)
 OBJ_FILES = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRC_FILES)) $(OBJ_DIR)/main_ios.o
 
 # iOS SDK settings
-IOS_SDK_VERSION = 17.0
 IOS_MIN_VERSION = 13.0
 IPHONE_SDK = iphoneos
 SIMULATOR_SDK = iphonesimulator
 
-# Compiler and flags
-CC = xcrun -sdk $(IPHONE_SDK) clang
-ARCH = -arch arm64
+# Resolve SDK paths using xcrun (requires full Xcode, not just CLT)
+SDKROOT_DEVICE    := $(shell xcrun --sdk $(IPHONE_SDK) --show-sdk-path 2>/dev/null)
+SDKROOT_SIMULATOR := $(shell xcrun --sdk $(SIMULATOR_SDK) --show-sdk-path 2>/dev/null)
 
-# SDL2 paths (you need to have SDL2 iOS frameworks)
-SDL2_PATH = /usr/local/opt/SDL2
-SDL2_IMAGE_PATH = /usr/local/opt/SDL2_image
-SDL2_TTF_PATH = /usr/local/opt/SDL2_ttf
+# Compiler (use clang with explicit -isysroot)
+CC ?= clang
 
-CFLAGS = -Wall -Wextra -std=c11 \
-	-I$(INCLUDE_DIR) \
-	-I$(SDL2_PATH)/include \
-	-I$(SDL2_IMAGE_PATH)/include \
-	-I$(SDL2_TTF_PATH)/include \
-	-miphoneos-version-min=$(IOS_MIN_VERSION) \
-	$(ARCH)
+# Default architecture for device
+ARCH_DEVICE = -arch arm64
 
-LDFLAGS = -F$(SDL2_PATH)/lib -framework SDL2 \
-	-F$(SDL2_IMAGE_PATH)/lib -framework SDL2_image \
-	-F$(SDL2_TTF_PATH)/lib -framework SDL2_ttf \
+# Determine simulator arch (arm64 on Apple Silicon, x86_64 on Intel)
+UNAME_ARCH := $(shell uname -m)
+ifeq ($(UNAME_ARCH),arm64)
+  ARCH_SIM = -arch arm64
+else
+  ARCH_SIM = -arch x86_64
+endif
+
+# Where the iOS SDL2 frameworks live. Place SDL2.framework, SDL2_image.framework, SDL2_ttf.framework here.
+# You can override this path when invoking make: make SDL2_FRAMEWORKS_DIR=/path/to/Frameworks
+SDL2_FRAMEWORKS_DIR ?= $(IOS_DIR)/Frameworks
+
+# Common Apple frameworks
+APPLE_FRAMEWORKS = \
 	-framework UIKit \
 	-framework Foundation \
 	-framework CoreGraphics \
 	-framework QuartzCore \
 	-framework OpenGLES \
-	-framework AudioToolbox \
+	-framework AudioToolbox
+
+# Flags for device
+CFLAGS_DEVICE = -Wall -Wextra -std=c11 \
+	-I$(INCLUDE_DIR) \
+	-I$(SDL2_FRAMEWORKS_DIR)/SDL2.framework/Headers \
+	-I$(SDL2_FRAMEWORKS_DIR)/SDL2_image.framework/Headers \
+	-I$(SDL2_FRAMEWORKS_DIR)/SDL2_ttf.framework/Headers \
+	-isysroot $(SDKROOT_DEVICE) \
 	-miphoneos-version-min=$(IOS_MIN_VERSION) \
-	$(ARCH)
+	$(ARCH_DEVICE)
 
-# Main target
-all: $(TARGET)
+LDFLAGS_DEVICE = -F$(SDL2_FRAMEWORKS_DIR) \
+	-framework SDL2 \
+	-framework SDL2_image \
+	-framework SDL2_ttf \
+	$(APPLE_FRAMEWORKS) \
+	-isysroot $(SDKROOT_DEVICE) \
+	-miphoneos-version-min=$(IOS_MIN_VERSION) \
+	$(ARCH_DEVICE)
 
-# Create executable
+# Flags for simulator
+CFLAGS_SIM = -Wall -Wextra -std=c11 \
+	-I$(INCLUDE_DIR) \
+	-I$(SDL2_FRAMEWORKS_DIR)/SDL2.framework/Headers \
+	-I$(SDL2_FRAMEWORKS_DIR)/SDL2_image.framework/Headers \
+	-I$(SDL2_FRAMEWORKS_DIR)/SDL2_ttf.framework/Headers \
+	-isysroot $(SDKROOT_SIMULATOR) \
+	-mios-simulator-version-min=$(IOS_MIN_VERSION) \
+	$(ARCH_SIM)
+
+LDFLAGS_SIM = -F$(SDL2_FRAMEWORKS_DIR) \
+	-framework SDL2 \
+	-framework SDL2_image \
+	-framework SDL2_ttf \
+	$(APPLE_FRAMEWORKS) \
+	-isysroot $(SDKROOT_SIMULATOR) \
+	-mios-simulator-version-min=$(IOS_MIN_VERSION) \
+	$(ARCH_SIM)
+
+# Default build (device)
+all: sdkcheck_device $(TARGET)
+
+# Create executable (device)
 $(TARGET): $(OBJ_FILES)
-	$(CC) $(ARCH) -o $@ $^ $(LDFLAGS)
+	$(CC) -o $@ $^ $(LDFLAGS_DEVICE)
 
-# Compile source files
+# Compile source files (device)
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	mkdir -p $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS_DEVICE) -c $< -o $@
 
 $(OBJ_DIR)/main_ios.o: main_ios.c
 	mkdir -p $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c main_ios.c -o $@
+	$(CC) $(CFLAGS_DEVICE) -c main_ios.c -o $@
+
+# Simulator build overrides
+simulator: sdkcheck_sim clean_sim $(TARGET)_sim
+
+$(TARGET)_sim: CFLAGS_DEVICE := $(CFLAGS_SIM)
+$(TARGET)_sim: LDFLAGS_DEVICE := $(LDFLAGS_SIM)
+$(TARGET)_sim: $(OBJ_FILES)
+	$(CC) -o $(TARGET) $^ $(LDFLAGS_DEVICE)
+
+clean_sim:
+	rm -rf $(OBJ_DIR) $(TARGET)
 
 # Clean build artifacts
 clean:
@@ -72,12 +122,28 @@ clean:
 # Rebuild
 re: clean all
 
-# Build for simulator
-simulator: CC = xcrun -sdk $(SIMULATOR_SDK) clang
-simulator: ARCH = -arch x86_64
-simulator: all
+# SDK checks with helpful messages
+sdkcheck_device:
+ifeq ($(SDKROOT_DEVICE),)
+	@echo "Error: iPhoneOS SDK not found." && \
+	echo "- Install Xcode from the App Store" && \
+	echo "- Then run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer" && \
+	echo "- Verify: xcrun --sdk iphoneos --show-sdk-path" && \
+	exit 1
+endif
+	@true
 
-.PHONY: clean re simulator all
+sdkcheck_sim:
+ifeq ($(SDKROOT_SIMULATOR),)
+	@echo "Error: iOS Simulator SDK not found." && \
+	echo "- Install Xcode from the App Store" && \
+	echo "- Then run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer" && \
+	echo "- Verify: xcrun --sdk iphonesimulator --show-sdk-path" && \
+	exit 1
+endif
+	@true
+
+.PHONY: clean re simulator all help sdkcheck_device sdkcheck_sim
 
 # Help target
 help:
@@ -85,12 +151,13 @@ help:
 	@echo ""
 	@echo "Targets:"
 	@echo "  all        - Build for iOS device (ARM64)"
-	@echo "  simulator  - Build for iOS Simulator (x86_64)"
+	@echo "  simulator  - Build for iOS Simulator (arm64 on Apple Silicon, x86_64 on Intel)"
 	@echo "  clean      - Remove build artifacts"
 	@echo "  re         - Clean and rebuild"
 	@echo ""
-	@echo "Prerequisites:"
-	@echo "  - Xcode with iOS SDK installed"
-	@echo "  - SDL2, SDL2_image, and SDL2_ttf frameworks for iOS"
+	@echo "Variables you can override:"
+	@echo "  SDL2_FRAMEWORKS_DIR  Path containing SDL2.framework, SDL2_image.framework, SDL2_ttf.framework (default: ios/Frameworks)"
 	@echo ""
-	@echo "Note: You may need to adjust SDL2 paths in this Makefile"
+	@echo "Prerequisites:"
+	@echo "  - Full Xcode with iOS SDK installed (Command Line Tools alone are not enough)"
+	@echo "  - SDL2, SDL2_image, and SDL2_ttf frameworks built for iOS (place them in $$SDL2_FRAMEWORKS_DIR)"
