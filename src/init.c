@@ -1,6 +1,6 @@
 #include "init.h"
 #include "globals.h"
-#if TARGET_OS_IPHONE
+#ifdef TARGET_OS_IPHONE
 #include <SDL_image.h>
 #else
 #include <SDL2/SDL_image.h>

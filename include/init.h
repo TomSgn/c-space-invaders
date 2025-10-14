@@ -1,7 +1,7 @@
 #ifndef INIT_H
 #define INIT_H
 
-#if TARGET_OS_IPHONE
+#ifdef TARGET_OS_IPHONE
 #include <SDL.h>
 #else
 #include <SDL2/SDL.h>

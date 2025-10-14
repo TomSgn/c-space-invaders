@@ -1,7 +1,7 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
-#if TARGET_OS_IPHONE
+#ifdef TARGET_OS_IPHONE
 #include <SDL.h>
 #include <SDL_ttf.h>
 #else
